@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حاسبة متوسط شراء الأسهم</title>
+<meta name="author" content="Ismail Jadwi">
+<meta name="theme-color" content="#0f766e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="متوسط الشراء">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f5f6f8;--card:#fff;--text:#1b2430;--muted:#6b7686;--line:#dde2ea;--accent:#0f766e;--good:#15803d;--bad:#b91c1c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--card:#19212b;--text:#e8edf3;--muted:#93a0b0;--line:#2b3644;--accent:#2dd4bf;--good:#4ade80;--bad:#f87171}}
+:root[data-theme="dark"]{--bg:#10151c;--card:#19212b;--text:#e8edf3;--muted:#93a0b0;--line:#2b3644;--accent:#2dd4bf;--good:#4ade80;--bad:#f87171}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,"Segoe UI",system-ui,sans-serif;line-height:1.6}
+main{max-width:720px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:8px 0 4px}
+p.sub{color:var(--muted);margin:0 0 16px;font-size:.9rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+h2{font-size:1.05rem;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:3px}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:1rem;font-family:inherit}
+input:focus,select:focus{outline:2px solid var(--accent)}
+.row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px}
+button{cursor:pointer;min-height:44px;touch-action:manipulation;border:0;border-radius:8px;padding:10px 14px;font-family:inherit;font-size:.95rem}
+.btn{background:var(--accent);color:#fff}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.del{background:transparent;color:var(--bad);font-size:1.2rem;padding:8px}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.box{background:var(--bg);border-radius:10px;padding:12px}
+.box small{color:var(--muted);display:block;font-size:.78rem}
+.box b{font-size:1.2rem}
+.big{grid-column:1/-1;border:1px solid var(--accent)}
+.big b{font-size:1.6rem;color:var(--accent)}
+.good{color:var(--good)}.bad{color:var(--bad)}
+.note{font-size:.88rem;margin-top:10px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.pdate{display:none}
+.cs{color:var(--accent);font-weight:bold}
+.sig{text-align:center;color:var(--muted);font-size:.85rem;margin:18px 0 8px;padding-top:12px;border-top:1px solid var(--line)}
+.sig b{color:var(--accent);letter-spacing:.3px}
+@media (max-width:420px){.grid3{grid-template-columns:1fr}.row{grid-template-columns:1fr 1fr auto}main{padding:12px}}
+@media print{
+  :root{--bg:#fff;--card:#fff;--text:#000;--muted:#444;--line:#bbb;--accent:#0f766e;--good:#15803d;--bad:#b91c1c;padding:0}
+  .actions,.del,#add,.noprint{display:none!important}
+  .pdate{display:block;color:#444;margin-bottom:8px}
+  .card{break-inside:avoid;border:1px solid #bbb}
+  input,select{border:none;background:none;padding:0;appearance:none;-webkit-appearance:none;font-weight:bold}
+  main{max-width:100%}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>📊 حاسبة متوسط شراء الأسهم</h1>
+<p class="sub">احسب متوسط التكلفة الجديد بعد شراء كميات إضافية، أو اعرف كم سهمًا تحتاج لشرائه للوصول إلى متوسط مستهدف.</p>
+<div class="pdate" id="pdate"></div>
+
+<div class="actions">
+  <button class="btn" id="print">🖨️ طباعة / حفظ PDF</button>
+</div>
+
+<div class="card">
+<h2>💱 العملة</h2>
+<div class="grid3">
+<div><label>عملة الإدخال</label>
+<select id="ic"><option value="USD">دولار (USD)</option><option value="SAR">ريال سعودي (SAR)</option></select></div>
+<div><label>عملة العرض</label>
+<select id="dc"><option value="USD">دولار (USD)</option><option value="SAR">ريال سعودي (SAR)</option></select></div>
+<div><label>سعر الصرف (ريال لكل 1 دولار)</label><input id="rate" type="number" inputmode="decimal" step="any" value="3.75"></div>
+</div>
+<div class="note noprint">الريال السعودي مربوط بالدولار بسعر 3.75 تقريبًا، ويمكنك تعديله. أدخل الأسعار بعملة الإدخال وستظهر النتائج بعملة العرض.</div>
+</div>
+
+<div class="card">
+<h2>1) مركزك الحالي</h2>
+<div class="grid">
+<div><label>عدد الأسهم الحالية</label><input id="shares" type="number" inputmode="decimal" min="0" placeholder="مثال: 100"></div>
+<div><label>متوسط سعر الشراء الحالي (<span class="cs ci"></span>)</label><input id="avg" type="number" inputmode="decimal" min="0" step="any" placeholder="مثال: 50"></div>
+<div><label>السعر السوقي الحالي (<span class="cs ci"></span>) اختياري</label><input id="market" type="number" inputmode="decimal" min="0" step="any" placeholder="مثال: 40"></div>
+<div><label>عمولة الشراء % (اختياري)</label><input id="fee" type="number" inputmode="decimal" min="0" step="any" placeholder="مثال: 0.15"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>2) عمليات الشراء الجديدة</h2>
+<div id="rows"></div>
+<button class="btn ghost" id="add">+ إضافة عملية شراء</button>
+</div>
+
+<div class="card">
+<h2>النتيجة <span class="cs cd"></span></h2>
+<div class="res">
+<div class="box big"><small>متوسط الشراء الجديد</small><b id="newAvg">—</b></div>
+<div class="box"><small>إجمالي الأسهم</small><b id="totShares">—</b></div>
+<div class="box"><small>إجمالي التكلفة</small><b id="totCost">—</b></div>
+<div class="box"><small>التغيّر في المتوسط</small><b id="diff">—</b></div>
+<div class="box"><small>الربح/الخسارة عند السعر السوقي</small><b id="pl">—</b></div>
+<div class="box"><small>الصعود المطلوب للتعادل</small><b id="be">—</b></div>
+<div class="box"><small>التكلفة بالعملة الأخرى</small><b id="alt">—</b></div>
+<div class="box"><small>المتوسط بالعملة الأخرى</small><b id="altAvg">—</b></div>
+</div>
+</div>
+
+<div class="card">
+<h2>3) كم سهمًا أشتري للوصول إلى متوسط مستهدف؟</h2>
+<div class="grid">
+<div><label>المتوسط المستهدف (<span class="cs ci"></span>)</label><input id="tAvg" type="number" inputmode="decimal" step="any" placeholder="مثال: 45"></div>
+<div><label>سعر الشراء المتوقع (<span class="cs ci"></span>)</label><input id="tPrice" type="number" inputmode="decimal" step="any" placeholder="مثال: 40"></div>
+</div>
+<div class="note" id="tOut" style="color:var(--text)">أدخل المتوسط المستهدف وسعر الشراء.</div>
+</div>
+<div class="sig">تطوير: <b dir="ltr">Ismail Jadwi</b></div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:0};
+const f=(n,d=2)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const SYM={USD:'$',SAR:'ر.س'};
+const rowsEl=$('rows');
+
+function k(){ // factor: input currency -> display currency
+  const r=num($('rate').value)||3.75, a=$('ic').value, b=$('dc').value;
+  if(a===b) return 1;
+  return a==='USD'?r:1/r;
+}
+const m=(n,d=2,kk=k(),cur=$('dc').value)=>f(n*kk,d)+' '+SYM[cur];
+
+function addRow(){
+  const d=document.createElement('div');d.className='row';
+  d.innerHTML='<div><label>عدد الأسهم</label><input type="number" inputmode="decimal" min="0" class="q"></div>'+
+  '<div><label>سعر الشراء (<span class="cs ci">'+SYM[$('ic').value]+'</span>)</label><input type="number" inputmode="decimal" min="0" step="any" class="p"></div>'+
+  '<button class="del" title="حذف">✕</button>';
+  d.querySelector('.del').onclick=()=>{d.remove();calc()};
+  d.querySelectorAll('input').forEach(i=>i.oninput=calc);
+  rowsEl.appendChild(d);
+}
+
+function calc(){
+  document.querySelectorAll('.ci').forEach(e=>e.textContent=SYM[$('ic').value]);
+  document.querySelectorAll('.cd').forEach(e=>e.textContent='('+SYM[$('dc').value]+')');
+  const kk=k(), fee=num($('fee').value)/100;
+  const S=num($('shares').value), A=num($('avg').value), M=num($('market').value);
+  let cost=S*A, shares=S;
+  rowsEl.querySelectorAll('.row').forEach(r=>{
+    const q=num(r.querySelector('.q').value), p=num(r.querySelector('.p').value);
+    cost+=q*p*(1+fee); shares+=q;
+  });
+  if(shares<=0){['newAvg','totShares','totCost','diff','pl','be','alt','altAvg'].forEach(i=>$(i).textContent='—');target();return}
+  const na=cost/shares;
+  $('newAvg').textContent=m(na,4);
+  $('totShares').textContent=f(shares,shares%1===0?0:2);
+  $('totCost').textContent=m(cost);
+  if(A>0){const d=na-A,pc=d/A*100;
+    $('diff').innerHTML='<span class="'+(d<=0?'good':'bad')+'">'+(d>0?'+':'')+m(d,4)+' ('+f(pc)+'%)</span>'}
+  else $('diff').textContent='—';
+  if(M>0){const pl=shares*M-cost;
+    $('pl').innerHTML='<span class="'+(pl>=0?'good':'bad')+'">'+(pl>0?'+':'')+m(pl)+' ('+f(pl/cost*100)+'%)</span>';
+    $('be').textContent=M>=na?'تجاوزت التعادل ✓':'+'+f((na/M-1)*100)+'%';
+  } else {$('pl').textContent='—';$('be').textContent='—'}
+  // other currency
+  const r=num($('rate').value)||3.75, ic=$('ic').value, dc=$('dc').value;
+  const other=dc==='USD'?'SAR':'USD';
+  const ko=(ic===other)?1:(ic==='USD'?r:1/r);
+  $('alt').textContent=m(cost,2,ko,other);
+  $('altAvg').textContent=m(na,4,ko,other);
+  target();
+}
+
+function target(){
+  const kk=k(),dc=$('dc').value,ic=$('ic').value;
+  const S=num($('shares').value),A=num($('avg').value),T=num($('tAvg').value),P=num($('tPrice').value),o=$('tOut');
+  if(!S||!A||!T||!P){o.textContent='أدخل المتوسط المستهدف وسعر الشراء (وأكمل مركزك الحالي).';return}
+  if(!((P<T&&T<A)||(A<T&&T<P))){o.innerHTML='<span class="bad">غير ممكن: المتوسط المستهدف يجب أن يقع بين سعر الشراء ومتوسطك الحالي.</span>';return}
+  const n=Math.ceil(S*(A-T)/(T-P)), c=n*P, real=(S*A+n*P)/(S+n);
+  o.innerHTML='تحتاج لشراء <b>'+f(n,0)+'</b> سهم بسعر '+m(P)+' (تكلفة '+m(c)+') ليصبح المتوسط ≈ <b>'+m(real,4)+'</b>.';
+}
+
+$('add').onclick=addRow;
+['shares','avg','market','fee','tAvg','tPrice','rate','ic','dc'].forEach(i=>{$(i).oninput=calc;$(i).onchange=calc});
+$('ic').onchange=()=>{document.querySelectorAll('.ci').forEach(e=>e.textContent=SYM[$('ic').value]);calc()};
+$('print').onclick=()=>{
+  $('pdate').textContent='تقرير بتاريخ '+new Date().toLocaleDateString('ar-SA')+' | عملة الإدخال: '+$('ic').value+' | عملة العرض: '+$('dc').value+' | سعر الصرف: '+$('rate').value+' | تطوير: Ismail Jadwi';
+  window.print();
+};
+addRow();calc();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
